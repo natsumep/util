@@ -1,0 +1,314 @@
+(function (window,undefined){
+	"use strict"
+	function Me(dom){
+		return new Me.fn.init(dom);
+	}
+	Me.fn=Me.prototype={
+		constructor:Me,
+		init:function(dom){
+
+		}
+	}
+	Me.fn.init.prototype=Me.fn=Me.prototype;
+
+
+
+})(window)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var util = {
+	addEvent: function(dom, type, fn) {
+		if (dom.addEventListener) {
+			dom.addEventListener(type, fn)
+		} else if (dom.attachEvent) {
+			dom.attachEvent("on" + type, fn)
+		} else {
+			dom["on" + type] = fn;
+		}
+	},
+	//自定义事件
+	on: function(type, fn) { //添加自定义事件；
+		if (typeof this.hands[type] === "undefined") {
+			this.hands[type] = [];
+		};
+		this.hands[type].push(fn);
+	},
+	//触发自定义事件
+	fire: function(type, date) { //触发自定义事件；
+		if (this.hands[type] instanceof Array) {
+			var Hands = this.hands[type];
+			//date=[window.evetn,date]
+			for (var i = 0; i < Hands.length; i++) {
+				Hands[i](date);
+			}
+		}
+	},
+	//移除自定义事件
+	remove: function(type, fn) {
+		if (this.hands[type] instanceof Array) {
+			for (var i = 0; i < this.hands[type].length; i++) {
+				this.hands[i] === fn && this.hands[type].splice(i, 1);
+			}
+		}
+	},
+	//子类继承父类的原型 父是一个类;  原型引用原型;
+	extends: function(a, b) {
+		var _O = function() {};
+		_O.prototype = b.prototype;
+		a.prototype = new _O;
+		a.prototype.constructor = a;
+	},
+	//原型式继承，父是一个单例对象;
+	clone: function(a) {
+		function F() {}
+		F.prototype = a;
+		return new F();
+	},
+	//方法复制;A复制到B
+	extend: function(a, b) {
+		if (!b) {
+			return a;
+		}
+		for (var x in b) {
+			a[x] = b[x]
+		}
+		return a;
+	},
+	methos: function(a, name, fn) {
+		a.prototype[name] = fn;
+	},
+	//Ajax;  4个参数(meth, url, callback, poseDate) 
+	ajax: (function() {
+		function handleReadyState(o, callback) {
+			var time = window.setInterval(
+				function() {
+					if (o && o.readyState === 4) {
+						window.clearInterval(time);
+						if (callback) {
+							callback(o);
+						}
+					}
+				}, 50)
+		};
+		var getXHR = function() {
+			var http = null;
+			try {
+				http = new XMLHttpRequest();
+				getXHR = function() {
+					return new XMLHttpRequest();
+				}
+			} catch (e) {
+				var xml = [
+					"MSXML2.XMLHTTP.3.0",
+					"MSXML2.XMLHTTP",
+					"Microsoft.XMLHTTP"
+				];
+				for (var i = 0; i < xml.length; i++) {
+					try {
+						http = new activeXObject(xml[i]);
+						getXHR = function() {
+							return new activeXObject(xml[i]);
+						}
+						break;
+					} catch (e) {};
+				}
+			}
+			return http;
+		};
+		return function(meth, url, callback, poseDate) {
+			var http = getXHR();
+			http.open(meth, url, true);
+			handleReadyState(http, callback);
+			http.send(meth === "get" ? null : poseDate || null);
+			return http;
+		}
+	})(),
+	//替换字符串中的{}中的内容 如果传入内容不是字符串和数字 不做替换
+	substitute: function(s, o) {
+		return s.replace(/{([^{}]*)})/g, function(a, b) {
+			var r = o[b];
+			return typeof r === "string" || typeof r === "number" ? r : a;
+		})
+	},
+	//深拷贝;从P拷贝到C
+	deepCopy: function(p, c) {
+		c = c || {};
+		for (var i in p) {
+			if (typeof p[i] === "Object") {
+				c[i] = (typeof p[i] === "Array") ? [] : {};
+				deepCopy(p(i), c[i])
+			} else {
+				c[i] = p[i];
+			}
+		}
+		return c;
+	},
+	//元素缩放方法 传入三个参数
+	/**
+	 *bod  需要缩放的dom
+	 *dom  触感缩放条件的子元素;ps:需要手动在CSS中增加一个鼠标样式;
+	 *flag 用于标示拖动的方向 如果不传 表示按鼠标移动的X Y 改变;如果传入"x" / "y"表示按x/y方向移动距离等比例缩放;
+	 */
+	drag: function(bod, dom, flag) {
+		dom.addEventListener("mousedown", function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			var x = e.clientX,
+				y = e.clientY,
+				height = parseInt(window.getComputedStyle(bod).height),
+				width = parseInt(window.getComputedStyle(bod).width),
+				_darg = function(e) {
+					e.preventDefault();
+					var _x = e.clientX,
+						_y = e.clientY,
+						X = _x - x,
+						Y = _y - y;
+					if (flag) {
+						if (flag === "x") {
+							bod.style.height = height + X + "px";
+							Y
+							bod.style.width = width + X + "px";
+						} else {
+							bod.style.height = height + Y + "px";
+							bod.style.width = width + Y + "px";
+						}
+
+					} else {
+						bod.style.height = height + Y + "px";
+						bod.style.width = width + X + "px";
+					}
+				};
+			document.addEventListener("mousemove", _darg)
+			document.addEventListener("mouseup", function() {
+				document.removeEventListener("mousemove", _darg);
+			})
+		})
+	},
+	//获取CSS
+	getStyle: function(ele, style) {
+		return window.getComputedStyle ? window.getComputedStyle(ele, null)[style] : ele.currentStyle[style];
+	},
+	//元素拖动方法;
+	move: function(bod, ele) { //移动 bod 是需要移动的dom ele是可以触发移动的子dom
+		ele = ele ? ele : bod; //如果只传一个参数  那就全部可以移动
+		var me = this;
+		ele.addEventListener("mousedown", function(e) {
+			e.stopPropagation();
+			var x = e.clientX,
+				y = e.clientY,
+				//这里通过加上一个margin来补偿多减去的offsetLeft
+				clickX = x - bod.offsetLeft + parseInt(me.getStyle(bod, "marginLeft")),
+				clickY = y - bod.offsetTop + parseInt(me.getStyle(bod, "marginTop")),
+				_move = function(e) {
+					//console.log(clickX)
+					bod.style.left = e.clientX - clickX + "px";
+					bod.style.top = e.clientY - clickY + "px";
+					e.preventDefault()
+				};
+			document.addEventListener("mousemove", _move);
+			document.addEventListener("mouseup", function() {
+				document.removeEventListener("mousemove", _move);
+			})
+		})
+	},
+	//获取元素到最外层dom的距离;
+	findOffset: function(ele, style) {
+		var str = ele[style];
+		if (ele.offsetParent) {
+			return str + findOffset(ele.offsetParent, style);
+		} else {
+			return str;
+		}
+	},
+	//节流函数 传入3个参数; fn 节流的函数, time节流的间隔时间,默认50 , context :函数作用域,默认window ;
+	throttlev: (function() {
+		var old = new Date().getTime();
+		return function(fn, time, context) {
+			var now = new Date().getTime(),
+				time = time ? time : 50;
+			if (now - old > time) {
+				fn.apply(context);
+				old = now;
+			}
+		}
+	})(),
+	//16进制颜色转rgb
+	//参数传入"#xxx" || "#xxxxxx"
+	getRGB: function(coloa) {
+		if (coloa.charAt(0) != "#" || coloa.length != 4 && coloa.length != 7) {
+			//alert(coloa.length)
+			console.log("请输入正确的颜色")
+		}
+		if (coloa.length == 4) {
+			var a = coloa.slice(1, 2);
+			var b = coloa.slice(2, 3)
+			var c = coloa.slice(3)
+			return "RGB(" + Number("0x" + a + a) + "," + Number("0x" + b + b) + "," + Number("0x" + c + c) + ")"
+		} else {
+			var a = coloa.slice(1, 3);
+			var b = coloa.slice(3, 5)
+			var c = coloa.slice(5)
+			return "rgb(" + Number("0x" + a) + "," + Number("0x" + b) + "," + Number("0x" + c) + ")"
+		}
+	},
+	//rgb转16进制, 
+	//传入(xxx,xxx,xxx);
+	getColor: function(rgb1, rgb2, rgb3) {
+		if (rgb1 >= 0 && rgb1 <= 255 && rgb2 >= 0 && rgb2 <= 255 && rgb3 >= 0 && rgb3 <= 255) {
+			a = parseInt(rgb1).toString(16)
+			b = parseInt(rgb2).toString(16)
+			c = parseInt(rgb3).toString(16)
+			if (a.length == b.length == b.length == 2) {
+				return "#" + a + b + c
+			}
+			if (a.length == 1) {
+				a = a + a;
+			}
+			if (b.length == 1) {
+				b = b + b;
+			}
+			if (c.length == 1) {
+				c = c + c;
+			}
+			return "#" + a + b + c;
+		}
+		console.log("请输入正确的颜色");
+	}
+
+};
+
+
+
+//调用方式util.xx();
