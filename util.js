@@ -1,4 +1,5 @@
 var util = {
+	//添加事件兼容
 	addEvent: function(dom, type, fn) {
 		if (dom.addEventListener) {
 			dom.addEventListener(type, fn)
@@ -33,31 +34,29 @@ var util = {
 			}
 		}
 	},
-	//子类继承父类的原型 父是一个类;  原型引用原型;
-	extends: function(a, b) {
-		var _O = function() {};
-		_O.prototype = b.prototype;
-		a.prototype = new _O;
-		a.prototype.constructor = a;
-	},
-	//原型式继承，父是一个单例对象;
-	clone: function(a) {
-		function F() {}
-		F.prototype = a;
-		return new F();
+	//子类继承
+	extends: function(child, super) {
+		if(typeof super === "function"){
+			var _O = function() {};
+			_O.prototype = super.prototype;
+			child.prototype = new _O;
+			child.prototype.constructor = child;
+		}else if(typeof super === "Object"){
+			function F() {};
+			F.prototype = a;
+			child.prototype= new F();
+		}
+		return child;
 	},
 	//方法复制;A复制到B
-	extend: function(a, b) {
+	clone: function(a, b) {
 		if (!b) {
 			return a;
 		}
 		for (var x in b) {
-			a[x] = b[x]
+			a[x] = b[x];
 		}
 		return a;
-	},
-	methos: function(a, name, fn) {
-		a.prototype[name] = fn;
 	},
 	//Ajax;  4个参数(meth, url, callback, poseDate) 
 	ajax: (function() {
@@ -259,7 +258,8 @@ var util = {
 		}
 		console.log("请输入正确的颜色");
 	},
-	getCode: function() {
+	//获取键值
+	getKeyCode: function() {
 		var e = e || window.event;
 		return e.keyCode || e.which;
 	},
@@ -343,7 +343,7 @@ var util = {
 	//dom 表示指定dom;不传表示所有锚链接都添加平缓移动动画;
 	animetionScroll: function(time, dom) {
 		time = time / 1000 || 2;
-
+		console.log("animetionScroll")
 		function show(dom, time) {
 			var y,
 				target = document.getElementById(dom.getAttribute("href").slice(1)) || "body";

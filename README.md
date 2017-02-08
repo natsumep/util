@@ -1,2 +1,2 @@
-# util
-//JavaScript 未分类基础方法库
+﻿# util
+//JavaScript 工具函数
