@@ -1,3 +1,4 @@
+"use strict"
 var util = {
 	//添加事件兼容
 	addEvent: function(dom, type, fn) {
@@ -35,13 +36,13 @@ var util = {
 		}
 	},
 	//子类继承
-	extends: function(child, super) {
-		if(typeof super === "function"){
+	extends: function(child, Super) {
+		if(typeof Super === "function"){
 			var _O = function() {};
-			_O.prototype = super.prototype;
+			_O.prototype = Super.prototype;
 			child.prototype = new _O;
 			child.prototype.constructor = child;
-		}else if(typeof super === "Object"){
+		}else if(typeof Super === "Object"){
 			function F() {};
 			F.prototype = a;
 			child.prototype= new F();
@@ -104,13 +105,6 @@ var util = {
 			return http;
 		}
 	})(),
-	//替换字符串中的{}中的内容 如果传入内容不是字符串和数字 不做替换
-	substitute: function(s, o) {
-		return s.replace(/{([^{}]*)})/g, function(a, b) {
-			var r = o[b];
-			return typeof r === "string" || typeof r === "number" ? r : a;
-		})
-	},
 	//深拷贝;从P拷贝到C
 	deepCopy: function(p, c) {
 		c = c || {};
@@ -175,6 +169,7 @@ var util = {
 		var me = this;
 		ele.addEventListener("mousedown", function(e) {
 			e.stopPropagation();
+			e.preventDefault();
 			var x = e.clientX,
 				y = e.clientY,
 				//这里通过加上一个margin来补偿多减去的offsetLeft
@@ -202,6 +197,7 @@ var util = {
 		}
 	},
 	//节流函数 传入3个参数; fn 节流的函数, time节流的间隔时间,默认50 , context :函数作用域,默认window ;
+	//间隔时间调用;
 	throttlev: function(fn, time, context) {
 		var old = new Date().getTime();
 		return function() {
@@ -215,6 +211,15 @@ var util = {
 				old = now;
 			}
 		}
+	},
+	//节流函数2 
+	//停止后多少秒调用
+	throttle:function(fn,time,context){
+		clearTimeout(fn.id);
+		fn.id=setTimeout(function(){
+			fn.call(context)
+			console.log(2)
+		},time)
 	},
 	//16进制颜色转rgb
 	//参数传入"#xxx" || "#xxxxxx"
@@ -262,6 +267,13 @@ var util = {
 	getKeyCode: function() {
 		var e = e || window.event;
 		return e.keyCode || e.which;
+	},
+	getScrollTop: function() {
+		if (document.documentElement && document.documentElement.scrollTop) {
+			return document.documentElement.scrollTop;
+		} else {
+			return document.body.scrollTop;
+		}
 	},
 	/**
 	 *键盘上下左右触发dom移动;
@@ -329,7 +341,7 @@ var util = {
 	//num代表需要添加多少个Br
 	//dom表示在上面元素之前添加;不传默认在body后面添加;
 	addBr: function(num, dom) {
-		for (let i = num; i >= 0; i--) {
+		for (var i = num; i >= 0; i--) {
 			var br = document.createElement("br");
 			if (!dom) {
 				document.body.appendChild(br);
