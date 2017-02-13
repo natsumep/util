@@ -37,15 +37,15 @@ var util = {
 	},
 	//子类继承
 	extends: function(child, Super) {
-		if(typeof Super === "function"){
+		if (typeof Super === "function") {
 			var _O = function() {};
 			_O.prototype = Super.prototype;
 			child.prototype = new _O;
 			child.prototype.constructor = child;
-		}else if(typeof Super === "Object"){
+		} else if (typeof Super === "Object") {
 			function F() {};
 			F.prototype = a;
-			child.prototype= new F();
+			child.prototype = new F();
 		}
 		return child;
 	},
@@ -125,13 +125,14 @@ var util = {
 	 *flag 用于标示拖动的方向 如果不传 表示按鼠标移动的X Y 改变;如果传入"x" / "y"表示按x/y方向移动距离等比例缩放;
 	 */
 	drag: function(bod, dom, flag) {
+		var me = this;
 		dom.addEventListener("mousedown", function(e) {
 			e.preventDefault();
 			e.stopPropagation();
 			var x = e.clientX,
 				y = e.clientY,
-				height = parseInt(window.getComputedStyle(bod).height),
-				width = parseInt(window.getComputedStyle(bod).width),
+				height = parseInt(me.getStyle(bod, height)),
+				width = parseInt(me.getStyle(bod, width)),
 				_darg = function(e) {
 					e.preventDefault();
 					var _x = e.clientX,
@@ -214,12 +215,11 @@ var util = {
 	},
 	//节流函数2 
 	//停止后多少秒调用
-	throttle:function(fn,time,context){
+	throttle: function(fn, time, context) {
 		clearTimeout(fn.id);
-		fn.id=setTimeout(function(){
+		fn.id = setTimeout(function() {
 			fn.call(context)
-			console.log(2)
-		},time)
+		}, time)
 	},
 	//16进制颜色转rgb
 	//参数传入"#xxx" || "#xxxxxx"
@@ -243,10 +243,11 @@ var util = {
 	//rgb转16进制, 
 	//传入(xxx,xxx,xxx);
 	getColor: function(rgb1, rgb2, rgb3) {
+		console.log(rgb1,rgb2,rgb3)
 		if (rgb1 >= 0 && rgb1 <= 255 && rgb2 >= 0 && rgb2 <= 255 && rgb3 >= 0 && rgb3 <= 255) {
-			a = parseInt(rgb1).toString(16)
-			b = parseInt(rgb2).toString(16)
-			c = parseInt(rgb3).toString(16)
+			var a = parseInt(rgb1).toString(16),
+			b = parseInt(rgb2).toString(16),
+			c = parseInt(rgb3).toString(16);
 			if (a.length == b.length == b.length == 2) {
 				return "#" + a + b + c
 			}
@@ -264,9 +265,9 @@ var util = {
 		console.log("请输入正确的颜色");
 	},
 	//获取键值
-	getKeyCode: function() {
+	getKeyCode: function(e) {
 		var e = e || window.event;
-		return e.keyCode || e.which;
+		return me.getKeyCode(e) || e.which;
 	},
 	getScrollTop: function() {
 		if (document.documentElement && document.documentElement.scrollTop) {
@@ -281,18 +282,19 @@ var util = {
 	 *传入两个参数:dom 需要移动的dom;
 	 *speed 移动速度,不传默认为50像素每秒;ps:为了保持动画连贯,最低每秒移动50像素
 	 */
-	keyDomMove: keyDomMove = (function() {
+	keyDomMove: (function() {
+		var me = this;
 		var keyCode = {
 			downKeyCode: function(e) {
 				var e = e || window.event;
-				if (e.keyCode === 37 || e.keyCode === 38 || e.keyCode === 39 || e.keyCode === 40) {
-					keyCode[e.keyCode] = true;
+				if (me.getKeyCode(e) === 37 || me.getKeyCode(e) === 38 || me.getKeyCode(e) === 39 || me.getKeyCode(e) === 40) {
+					keyCode[me.getKeyCode(e)] = true;
 				}
 			},
 			upKeyCode: function(e) {
 				var e = e || window.event;
-				if (keyCode[e.keyCode]) {
-					keyCode[e.keyCode] = false;
+				if (keyCode[me.getKeyCode(e)]) {
+					keyCode[me.getKeyCode(e)] = false;
 				}
 			},
 			time: {},
@@ -309,29 +311,29 @@ var util = {
 			document.addEventListener("keydown", function(e) {
 				keyCode.downKeyCode();
 				if (keyCode[37] && !keyCode.time[37]) {
-					keyCode.time[e.keyCode] = setInterval(function() {
+					keyCode.time[me.getKeyCode(e)] = setInterval(function() {
 						dom.style.left = box.offsetLeft - left - speed + "px";
 					}, 20)
 				};
 				if (keyCode[38] && !keyCode.time[38]) {
-					keyCode.time[e.keyCode] = setInterval(function() {
+					keyCode.time[me.getKeyCode(e)] = setInterval(function() {
 						dom.style.top = dom.offsetTop - top - speed + "px";
 					}, 20)
 				};
 				if (keyCode[39] && !keyCode.time[39]) {
-					keyCode.time[e.keyCode] = setInterval(function() {
+					keyCode.time[me.getKeyCode(e)] = setInterval(function() {
 						dom.style.left = dom.offsetLeft - left + speed + "px";
 					}, 20)
 				};
 				if (keyCode[40] && !keyCode.time[40]) {
-					keyCode.time[e.keyCode] = setInterval(function() {
+					keyCode.time[me.getKeyCode(e)] = setInterval(function() {
 						dom.style.top = dom.offsetTop - top + speed + "px";
 					}, 20)
 				};
 				document.addEventListener("keyup", function(e) {
 					keyCode.upKeyCode();
-					clearInterval(keyCode.time[e.keyCode]);
-					keyCode.time[e.keyCode] = null;
+					clearInterval(keyCode.time[me.getKeyCode(e)]);
+					keyCode.time[me.getKeyCode(e)] = null;
 				})
 			})
 
@@ -355,17 +357,18 @@ var util = {
 	//dom 表示指定dom;不传表示所有锚链接都添加平缓移动动画;
 	animetionScroll: function(time, dom) {
 		time = time / 1000 || 2;
-		console.log("animetionScroll")
+		var me = this;
+
 		function show(dom, time) {
 			var y,
-				target = document.getElementById(dom.getAttribute("href").slice(1)) || "body";
+				target = dom.getAttribute("href").slice(1) ? document.getElementById(dom.getAttribute("href").slice(1)) : "body";
 			if (target === "body") {
 				y = 0;
 			} else {
 				y = target.offsetTop;
 			};
-			var _y = (y - document.body.scrollTop) / (time * 60),
-				top = document.body.scrollTop,
+			var _y = (y - me.getScrollTop()) / (time * 60),
+				top = me.getScrollTop(),
 				time = setInterval(function() {
 					top += _y;
 					if ((_y > 0 && top >= y) || (_y < 0 && top <= y)) {
@@ -391,7 +394,7 @@ var util = {
 			})
 		}
 	},
-	
+
 };
 
 

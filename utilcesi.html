@@ -3,12 +3,97 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Document</title>
+	<style>
+		input[type="text"]{
+			background: transparent;
+			border: 0;
+			color: #000;
+			outline: 0;
+		}
+
+	</style>
 </head>
 <body>
-	
+		<div contentEditable>11 </div>
+		<input type="text" class="input_rgb" value="242323423">
+		<br>
+		<input type="text" class="get_color">
+		<button class="get_color_but">转换为#xxx</button >
+			<br>
+		<input type="text" placeholder="输入#xxxxxx||#xxx" class="input_color">
+			<br>
+		<input type="text" class="get_rgb">
+		<button class="get_rgb_but">转换为rgb</button>
 </body>
 <script src="util.js"></script>
 <script>
-	alert(util.getRGB("#999"))
+	var inputRgb=document.querySelector(".input_rgb"),
+		getColor=document.querySelector(".get_color"),
+		getColorBut=document.querySelector(".get_color_but"),
+		inputColor=document.querySelector(".input_color"),
+		getRgb=document.querySelector(".get_rgb"),
+		getRgbBut=document.querySelector(".get_rgb_but");
+
+		getColorBut.addEventListener("click",function(){
+			var inputRgbvalue=inputRgb.value.trim().split(" ").filter(function(item,index){
+				if(item){
+					return item;
+				}
+			});
+			console.log(inputRgbvalue+" + " + typeof inputRgbvalue)
+			var value=util.getColor.apply(this,inputRgbvalue);
+				getColor.value=value;
+		})
+		getRgbBut.addEventListener("click",function(){
+			var inputColorvalue=inputColor.value,
+				value=util.getRGB(inputColorvalue);
+				getRgb.value=value;
+		})
+	function getCursortPosition(element) {
+        var CaretPos = 0;
+        if (document.selection) {//支持IE
+            element.focus();
+            var Sel = document.selection.createRange();
+            Sel.moveStart('character', -element.value.length);
+            CaretPos = Sel.text.length;
+        }
+        else if (element.selectionStart || element.selectionStart == '0')//支持firefox
+            CaretPos = element.selectionStart;
+        return (CaretPos);
+    }
+    function setCaretPosition(element, pos){
+            if(element.setSelectionRange)
+            {
+                element.focus();
+                element.setSelectionRange(pos,pos+1);
+               
+            }
+            else if (element.createTextRange) {
+                var range = element.createTextRange();
+                range.collapse(true);
+                range.moveEnd('character', pos);
+                range.moveStart('character', pos);
+                range.select();
+                element.focus();
+            }
+        }
+var s = "i love you~",
+	i=0;
+	document.querySelector("div").onclick=function(){
+		alert(getCursortPosition(document.querySelector("div")))
+	}
+	
+/*var time=setInterval(function(){
+	
+	document.querySelector("h1").style.outline="none";
+	document.querySelector("h1").innerHTML+=s[i];
+	document.querySelector("h1").focus()
+	setCaretPosition(document.querySelector("h1"),getCursortPosition(document.querySelector("h1"))+2)
+
+	i++;
+	if(i>=s.length){
+		clearInterval(time);
+	}
+},~~Math.random()*500+500)*/
 </script>
 </html>
