@@ -3,19 +3,17 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Document</title>
-	<style>
-		input[type="text"]{
-			background: transparent;
-			border: 0;
-			color: #000;
-			outline: 0;
-		}
 
-	</style>
 </head>
 <body>
+<h1>我爱北京天安啊门</h1>
+<h1>我爱北京天安啊门</h1>
+<h1>我爱北京天安啊门</h1>
+<h1>我爱北京天安啊门</h1>
+<h1>我爱北京天安啊门</h1>
+
 		<div contentEditable>11 </div>
-		<input type="text" class="input_rgb" value="242323423">
+		<input type="text" class="input_rgb" placeholder="输入xxx xxx xxx 空格隔开">
 		<br>
 		<input type="text" class="get_color">
 		<button class="get_color_but">转换为#xxx</button >
@@ -49,40 +47,7 @@
 				value=util.getRGB(inputColorvalue);
 				getRgb.value=value;
 		})
-	function getCursortPosition(element) {
-        var CaretPos = 0;
-        if (document.selection) {//支持IE
-            element.focus();
-            var Sel = document.selection.createRange();
-            Sel.moveStart('character', -element.value.length);
-            CaretPos = Sel.text.length;
-        }
-        else if (element.selectionStart || element.selectionStart == '0')//支持firefox
-            CaretPos = element.selectionStart;
-        return (CaretPos);
-    }
-    function setCaretPosition(element, pos){
-            if(element.setSelectionRange)
-            {
-                element.focus();
-                element.setSelectionRange(pos,pos+1);
-               
-            }
-            else if (element.createTextRange) {
-                var range = element.createTextRange();
-                range.collapse(true);
-                range.moveEnd('character', pos);
-                range.moveStart('character', pos);
-                range.select();
-                element.focus();
-            }
-        }
-var s = "i love you~",
-	i=0;
-	document.querySelector("div").onclick=function(){
-		alert(getCursortPosition(document.querySelector("div")))
-	}
-	
+
 /*var time=setInterval(function(){
 	
 	document.querySelector("h1").style.outline="none";
@@ -95,5 +60,43 @@ var s = "i love you~",
 		clearInterval(time);
 	}
 },~~Math.random()*500+500)*/
+
+
+function typeWritr(doms, time) {
+	var arr = [];
+	if (doms.length) {
+		arr = [].slice.call(doms) || doms;
+	} else {
+		arr.push(doms)
+	}
+	var arrValue = [];
+	var times = 0;
+	var f = 0;
+	var e = 0;
+	var c = 0;
+	for (var i = 0; i < arr.length; i++) {
+		if (arr[i].innerHTML) {
+			arrValue.push(arr[i].innerHTML)
+			times += arr[i].innerHTML.length;
+			arr[i].innerHTML = "";
+		}
+	};
+	var j = arrValue[0].length;
+	var time = setInterval(function() {
+		if (f < j) {
+			arr[e].innerHTML += arrValue[e][c];
+			f++;
+			c++;
+		} else {
+			j += arrValue[e].length;
+			e ++;
+			c = 0;
+		}
+		if (f >= times) {
+			clearInterval(time);
+		}
+	}, time)
+};
+ typeWritr(document.querySelectorAll("h1"),200)
 </script>
 </html>

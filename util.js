@@ -36,18 +36,18 @@ var util = {
 		}
 	},
 	//子类继承
-	extends: function(child, Super) {
-		if (typeof Super === "function") {
-			var _O = function() {};
-			_O.prototype = Super.prototype;
-			child.prototype = new _O;
-			child.prototype.constructor = child;
-		} else if (typeof Super === "Object") {
-			function F() {};
-			F.prototype = a;
-			child.prototype = new F();
+	extend: function(c, s) {
+		if (typeof s === "function") {
+			var _O = function() {}
+			_O.prototype = s.prototype
+			c.prototype = new _O()
+			c.prototype.constructor = c
+		} else if (typeof s === "Object") {
+			var F = function() {}
+			F.prototype = a
+			c.prototype = new F()
 		}
-		return child;
+		return c;
 	},
 	//方法复制;A复制到B
 	clone: function(a, b) {
@@ -243,11 +243,11 @@ var util = {
 	//rgb转16进制, 
 	//传入(xxx,xxx,xxx);
 	getColor: function(rgb1, rgb2, rgb3) {
-		console.log(rgb1,rgb2,rgb3)
+		console.log(rgb1, rgb2, rgb3)
 		if (rgb1 >= 0 && rgb1 <= 255 && rgb2 >= 0 && rgb2 <= 255 && rgb3 >= 0 && rgb3 <= 255) {
 			var a = parseInt(rgb1).toString(16),
-			b = parseInt(rgb2).toString(16),
-			c = parseInt(rgb3).toString(16);
+				b = parseInt(rgb2).toString(16),
+				c = parseInt(rgb3).toString(16);
 			if (a.length == b.length == b.length == 2) {
 				return "#" + a + b + c
 			}
@@ -268,13 +268,6 @@ var util = {
 	getKeyCode: function(e) {
 		var e = e || window.event;
 		return me.getKeyCode(e) || e.which;
-	},
-	getScrollTop: function() {
-		if (document.documentElement && document.documentElement.scrollTop) {
-			return document.documentElement.scrollTop;
-		} else {
-			return document.body.scrollTop;
-		}
 	},
 	/**
 	 *键盘上下左右触发dom移动;
@@ -297,7 +290,7 @@ var util = {
 					keyCode[me.getKeyCode(e)] = false;
 				}
 			},
-			time: {},
+			time: {}
 		};
 		return function(dom, speed) {
 			if (typeof speed != "number") {
@@ -394,6 +387,26 @@ var util = {
 			})
 		}
 	},
+	//获取当前页面可视窗口
+	getClientHeight: function() {
+		if (window.innerHeight) {
+			return window.innerHeight;
+		} else if (document.documentElement && document.documentElement.clientHeight) {
+			return document.documentElement.clientHeight;
+		} else {
+			return document.body.clientHeight;
+		}
+	},
+	//获取滚动条位置
+	getScrollTop: function() {
+		if (window.pageYOffset) {
+			return window.pageYOffset;
+		} else if (document.documentElement && document.documentElement.scrollTop) {
+			return document.documentElement.scrollTop;
+		} else {
+			return document.body.scrollTop;
+		}
+	}
 
 };
 
