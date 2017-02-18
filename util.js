@@ -165,7 +165,7 @@ var util = {
 		return window.getComputedStyle ? window.getComputedStyle(ele, null)[style] : ele.currentStyle[style];
 	},
 	//元素拖动方法;
-	move: function(bod, ele) { //移动 bod 是需要移动的dom ele是可以触发移动的子dom
+	DOMMove: function(bod, ele) { //移动 bod 是需要移动的dom ele是可以触发移动的子dom
 		ele = ele ? ele : bod; //如果只传一个参数  那就全部可以移动
 		var me = this;
 		ele.addEventListener("mousedown", function(e) {
@@ -271,66 +271,107 @@ var util = {
 	},
 	/**
 	 *键盘上下左右触发dom移动;
-	 *可以同时触发两个方向的事件,
-	 *传入两个参数:dom 需要移动的dom;
-	 *speed 移动速度,不传默认为50像素每秒;ps:为了保持动画连贯,最低每秒移动50像素
+	 *可以同时触发两个方向的事件;
+	 *传入四个参数:dom 需要移动的dom;
+	 *main 移动的范围容器
+	 *speed 每秒移动速度;
+	 *callback 每次执行触发的函数;
 	 */
-	keyDomMove: (function() {
+	keyDomMove : (function() {
+		//通过闭包保存变量
 		var me = this;
 		var keyCode = {
+			//每次按下上下左右的将当前按下的方向保存 为ture;
 			downKeyCode: function(e) {
 				var e = e || window.event;
-				if (me.getKeyCode(e) === 37 || me.getKeyCode(e) === 38 || me.getKeyCode(e) === 39 || me.getKeyCode(e) === 40) {
-					keyCode[me.getKeyCode(e)] = true;
+				//只需要用到上下左右 只保存4个键值;
+				if (me.getKeyCode() === 37 || me.getKeyCode() === 38 || me.getKeyCode() === 39 || me.getKeyCode() === 40) {
+					keyCode[me.getKeyCode()] = true;
 				}
 			},
+			//每次弹起上下左右的将当前弹起的方向修改为flase;
 			upKeyCode: function(e) {
 				var e = e || window.event;
-				if (keyCode[me.getKeyCode(e)]) {
-					keyCode[me.getKeyCode(e)] = false;
+				if (keyCode[me.getKeyCode()]) {
+					keyCode[me.getKeyCode()] = false;
 				}
 			},
-			time: {}
+			//用于保存当前的setInterval;通过定时器增强小球移动的连贯性;
+			time: {},
 		};
-		return function(dom, speed) {
+		return function(dom, main, speed, callback) {
 			if (typeof speed != "number") {
 				speed = 1;
 			} else {
-				speed = (speed / 50) > 1 ? (speed / 50) : 1
+				//速度必须大于60px每秒;每次移动的像素小于1px 浏览器会修正为0px;这也是因为运用了定时器的缺点;
+				//除以60是因为浏览器播放动画每秒60帧可以保持动画的流畅性;
+				speed = (speed / 60) > 1 ? (speed / 60) : 1
 			}
-			var left = parseInt(window.getComputedStyle(dom).marginLeft),
-				top = parseInt(window.getComputedStyle(dom).marginTop);
+			var left = parseInt(me.getStyle(dom, "marginLeft")),
+				top = parseInt(me.getStyle(dom, "marginTop")),
+				mainHeigeht = parseInt(me.getStyle(main, "height")) - 20,
+				mainWidth = parseInt(me.getStyle(main, "width")) - 20,
+				//用于左右 和上下穿透;
+				changeXY = function(xy, min, max) {
+					if (xy < min) {
+						xy = max;
+					} else if (xy >= max) {
+						xy = min;
+					}
+					return xy;
+				};
 
-			document.addEventListener("keydown", function(e) {
+			addEvent(document, "keydown", function(e) {
+				var e = e || window.event;
+				e.preventDefault ? e.preventDefault() : e.cancelBubble = true;;
 				keyCode.downKeyCode();
 				if (keyCode[37] && !keyCode.time[37]) {
-					keyCode.time[me.getKeyCode(e)] = setInterval(function() {
-						dom.style.left = box.offsetLeft - left - speed + "px";
-					}, 20)
+					keyCode.time[me.getKeyCode()] = setInterval(function() {
+						var x = dom.offsetLeft - left - speed;
+						x = changeXY(x, 0, mainWidth);
+						dom.style.left = x + "px";
+						callback && callback();
+					}, 50 / 3)
+
 				};
 				if (keyCode[38] && !keyCode.time[38]) {
-					keyCode.time[me.getKeyCode(e)] = setInterval(function() {
-						dom.style.top = dom.offsetTop - top - speed + "px";
-					}, 20)
+					keyCode.time[me.getKeyCode()] = setInterval(function() {
+						var y = dom.offsetTop - top - speed
+						y = changeXY(y, 0, mainHeigeht);
+						dom.style.top = y + "px";
+						callback && callback();
+					}, 50 / 3)
+
 				};
 				if (keyCode[39] && !keyCode.time[39]) {
-					keyCode.time[me.getKeyCode(e)] = setInterval(function() {
-						dom.style.left = dom.offsetLeft - left + speed + "px";
-					}, 20)
+					keyCode.time[me.getKeyCode()] = setInterval(function() {
+						var x = dom.offsetLeft - left + speed;
+						x = changeXY(x, 0, mainWidth);
+						dom.style.left = x + "px";
+						callback && callback();
+					}, 50 / 3)
+
 				};
 				if (keyCode[40] && !keyCode.time[40]) {
-					keyCode.time[me.getKeyCode(e)] = setInterval(function() {
-						dom.style.top = dom.offsetTop - top + speed + "px";
-					}, 20)
+					keyCode.time[me.getKeyCode()] = setInterval(function() {
+						var y = dom.offsetTop - top + speed;
+						y = changeXY(y, 0, mainHeigeht);
+						dom.style.top = y + "px";
+						callback && callback();
+					}, 50 / 3)
+
 				};
-				document.addEventListener("keyup", function(e) {
+				//每次弹起按键 移除当前方向的定时器 ;
+				addEvent(document, "keyup", function(e) {
+					var e = e || window.event;
 					keyCode.upKeyCode();
-					clearInterval(keyCode.time[me.getKeyCode(e)]);
-					keyCode.time[me.getKeyCode(e)] = null;
+					clearInterval(keyCode.time[me.getKeyCode()]);
+					keyCode.time[me.getKeyCode()] = null;
 				})
 			})
 
 		}
+
 	})(),
 	//添加空白;
 	//num代表需要添加多少个Br
