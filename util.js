@@ -6,8 +6,13 @@ var util = {
 			dom.addEventListener(type, fn)
 		} else if (dom.attachEvent) {
 			dom.attachEvent("on" + type, fn)
-		} else {
-			dom["on" + type] = fn;
+		} 
+	},
+	removeEvent:function(dom,type,fn){
+		if(dom.removeEventListener){
+			dom.removeEventListener(type,fn)
+		}else if(dom.detachEvent){
+			dom.detachEvent("on"+type,fn)
 		}
 	},
 	//自定义事件
@@ -35,6 +40,43 @@ var util = {
 			}
 		}
 	},
+	//设置cookie
+	//key:cookie名称；
+	//value：cookie值；
+	//options：一个对象 包含expires path domain secure 
+	setCookie:function(key,value,options){
+		var str = escape(key) + "=" + escape(value);
+		if(options.expires){
+			var time= new Date();
+			time.setTime(time.getTime()+options.expires*3600*1000)
+			options.expires=time.toUTCString();
+		}
+		for(var x in options){
+			str += ";"+ x + "=" + options[x];
+		}
+		document.cookie=str;
+	},
+	getCookie:function(key){
+		var _key =" "+escape(key);
+		var _cookie=" "+document.cookie+";";
+		var index=_cookie.indexOf(_key);
+		if(index===-1){
+			return null
+		};
+		var endIndex=_cookie.indexOf(";",index);
+		var value=_cookie.slice(index+_key.length+1,endIndex);
+		value= unescape(value);
+		return value;
+	},
+	deleteCookie:function(key){
+		var value=this.getCookie(key);
+		if(valie===null){
+			return false;
+		}
+		this.setCookie(key,null,{
+			expires:0
+		})
+	},
 	//子类继承
 	extend: function(c, s) {
 		if (typeof s === "function") {
@@ -59,52 +101,6 @@ var util = {
 		}
 		return a;
 	},
-	//Ajax;  4个参数(meth, url, callback, poseDate) 
-	ajax: (function() {
-		function handleReadyState(o, callback) {
-			var time = window.setInterval(
-				function() {
-					if (o && o.readyState === 4) {
-						window.clearInterval(time);
-						if (callback) {
-							callback(o);
-						}
-					}
-				}, 50)
-		};
-		var getXHR = function() {
-			var http = null;
-			try {
-				http = new XMLHttpRequest();
-				getXHR = function() {
-					return new XMLHttpRequest();
-				}
-			} catch (e) {
-				var xml = [
-					"MSXML2.XMLHTTP.3.0",
-					"MSXML2.XMLHTTP",
-					"Microsoft.XMLHTTP"
-				];
-				for (var i = 0; i < xml.length; i++) {
-					try {
-						http = new activeXObject(xml[i]);
-						getXHR = function() {
-							return new activeXObject(xml[i]);
-						}
-						break;
-					} catch (e) {};
-				}
-			}
-			return http;
-		};
-		return function(meth, url, callback, poseDate) {
-			var http = getXHR();
-			http.open(meth, url, true);
-			handleReadyState(http, callback);
-			http.send(meth === "get" ? null : poseDate || null);
-			return http;
-		}
-	})(),
 	//深拷贝;从P拷贝到C
 	deepCopy: function(p, c) {
 		c = c || {};
@@ -118,6 +114,14 @@ var util = {
 		}
 		return c;
 	},
+	stopPropagation:function(e){
+		var e = e || window.event;
+		e.stopPropagation?e.stopPropagation():e.cancelBubble=true;
+	},
+	preventDefault:function(e){
+		var e = e || window.event;
+		e.preventDefault?e.preventDefault():e.returnValue=false;
+	},
 	//元素缩放方法 传入三个参数
 	/**
 	 *bod  需要缩放的dom
@@ -126,15 +130,14 @@ var util = {
 	 */
 	drag: function(bod, dom, flag) {
 		var me = this;
-		dom.addEventListener("mousedown", function(e) {
-			e.preventDefault();
-			e.stopPropagation();
+		this.addEvent(dom,"mousedown", function(e) {
+			me.preventDefault();
+			me.stopPropagation();
 			var x = e.clientX,
 				y = e.clientY,
-				height = parseInt(me.getStyle(bod, height)),
-				width = parseInt(me.getStyle(bod, width)),
+				height = parseInt(me.getStyle(bod, "height")),
+				width = parseInt(me.getStyle(bod, "width")),
 				_darg = function(e) {
-					e.preventDefault();
 					var _x = e.clientX,
 						_y = e.clientY,
 						X = _x - x,
@@ -154,9 +157,9 @@ var util = {
 						bod.style.width = width + X + "px";
 					}
 				};
-			document.addEventListener("mousemove", _darg)
-			document.addEventListener("mouseup", function() {
-				document.removeEventListener("mousemove", _darg);
+			me.addEvent(document,"mousemove", _darg)
+			me.addEvent(document,"mouseup", function() {
+				me.removeEvent(document,"mousemove", _darg);
 			})
 		})
 	},
@@ -168,23 +171,22 @@ var util = {
 	DOMMove: function(bod, ele) { //移动 bod 是需要移动的dom ele是可以触发移动的子dom
 		ele = ele ? ele : bod; //如果只传一个参数  那就全部可以移动
 		var me = this;
-		ele.addEventListener("mousedown", function(e) {
-			e.stopPropagation();
-			e.preventDefault();
+		this.addEvent(ele,"mousedown", function(e) {
+			me.stopPropagation();
+			me.preventDefault();
 			var x = e.clientX,
 				y = e.clientY,
 				//这里通过加上一个margin来补偿多减去的offsetLeft
 				clickX = x - bod.offsetLeft + parseInt(me.getStyle(bod, "marginLeft")),
 				clickY = y - bod.offsetTop + parseInt(me.getStyle(bod, "marginTop")),
 				_move = function(e) {
-					//console.log(clickX)
 					bod.style.left = e.clientX - clickX + "px";
 					bod.style.top = e.clientY - clickY + "px";
-					e.preventDefault()
+					me.preventDefault()
 				};
-			document.addEventListener("mousemove", _move);
-			document.addEventListener("mouseup", function() {
-				document.removeEventListener("mousemove", _move);
+			me.addEvent(document,"mousemove", _move);
+			me.addEvent(document,"mouseup", function() {
+				me.removeEvent(document,"mousemove", _move);
 			})
 		})
 	},
@@ -267,7 +269,7 @@ var util = {
 	//获取键值
 	getKeyCode: function(e) {
 		var e = e || window.event;
-		return me.getKeyCode(e) || e.which;
+		return e.KeyCode || e.which;
 	},
 	/**
 	 *键盘上下左右触发dom移动;
@@ -277,102 +279,82 @@ var util = {
 	 *speed 每秒移动速度;
 	 *callback 每次执行触发的函数;
 	 */
-	keyDomMove : (function() {
-		//通过闭包保存变量
-		var me = this;
-		var keyCode = {
-			//每次按下上下左右的将当前按下的方向保存 为ture;
-			downKeyCode: function(e) {
-				var e = e || window.event;
-				//只需要用到上下左右 只保存4个键值;
-				if (me.getKeyCode() === 37 || me.getKeyCode() === 38 || me.getKeyCode() === 39 || me.getKeyCode() === 40) {
-					keyCode[me.getKeyCode()] = true;
+ keyDomMove : (function() {
+	//通过闭包保存变量
+	var keyCode = {
+		keyDownArr: [],
+		//每次按下上下左右的将当前按下的方向保存 为ture;
+		downKeyCode: function(e) {
+			var e = e || window.event;
+			//只需要用到上下左右 只保存4个键值;
+			if (util.getKeyCode() === 37 || util.getKeyCode() === 38 || util.getKeyCode() === 39 || util.getKeyCode() === 40) {
+				e.preventDefault ? e.preventDefault() : e.cancelBubble = true;
+				if (keyCode.keyDownArr.indexOf(e.keyCode) === -1) {
+					keyCode.keyDownArr.push(e.keyCode)
 				}
-			},
-			//每次弹起上下左右的将当前弹起的方向修改为flase;
-			upKeyCode: function(e) {
-				var e = e || window.event;
-				if (keyCode[me.getKeyCode()]) {
-					keyCode[me.getKeyCode()] = false;
-				}
-			},
-			//用于保存当前的setInterval;通过定时器增强小球移动的连贯性;
-			time: {},
-		};
-		return function(dom, main, speed, callback) {
-			if (typeof speed != "number") {
-				speed = 1;
-			} else {
-				//速度必须大于60px每秒;每次移动的像素小于1px 浏览器会修正为0px;这也是因为运用了定时器的缺点;
-				//除以60是因为浏览器播放动画每秒60帧可以保持动画的流畅性;
-				speed = (speed / 60) > 1 ? (speed / 60) : 1
 			}
-			var left = parseInt(me.getStyle(dom, "marginLeft")),
-				top = parseInt(me.getStyle(dom, "marginTop")),
-				mainHeigeht = parseInt(me.getStyle(main, "height")) - 20,
-				mainWidth = parseInt(me.getStyle(main, "width")) - 20,
-				//用于左右 和上下穿透;
-				changeXY = function(xy, min, max) {
-					if (xy < min) {
-						xy = max;
-					} else if (xy >= max) {
-						xy = min;
-					}
-					return xy;
-				};
-
-			addEvent(document, "keydown", function(e) {
-				var e = e || window.event;
-				e.preventDefault ? e.preventDefault() : e.cancelBubble = true;;
-				keyCode.downKeyCode();
-				if (keyCode[37] && !keyCode.time[37]) {
-					keyCode.time[me.getKeyCode()] = setInterval(function() {
-						var x = dom.offsetLeft - left - speed;
-						x = changeXY(x, 0, mainWidth);
-						dom.style.left = x + "px";
-						callback && callback();
-					}, 50 / 3)
-
-				};
-				if (keyCode[38] && !keyCode.time[38]) {
-					keyCode.time[me.getKeyCode()] = setInterval(function() {
-						var y = dom.offsetTop - top - speed
-						y = changeXY(y, 0, mainHeigeht);
-						dom.style.top = y + "px";
-						callback && callback();
-					}, 50 / 3)
-
-				};
-				if (keyCode[39] && !keyCode.time[39]) {
-					keyCode.time[me.getKeyCode()] = setInterval(function() {
-						var x = dom.offsetLeft - left + speed;
-						x = changeXY(x, 0, mainWidth);
-						dom.style.left = x + "px";
-						callback && callback();
-					}, 50 / 3)
-
-				};
-				if (keyCode[40] && !keyCode.time[40]) {
-					keyCode.time[me.getKeyCode()] = setInterval(function() {
-						var y = dom.offsetTop - top + speed;
-						y = changeXY(y, 0, mainHeigeht);
-						dom.style.top = y + "px";
-						callback && callback();
-					}, 50 / 3)
-
-				};
-				//每次弹起按键 移除当前方向的定时器 ;
-				addEvent(document, "keyup", function(e) {
-					var e = e || window.event;
-					keyCode.upKeyCode();
-					clearInterval(keyCode.time[me.getKeyCode()]);
-					keyCode.time[me.getKeyCode()] = null;
-				})
-			})
-
+		},
+		//每次弹起上下左右的将当前弹起的方向修改为flase;
+		upKeyCode: function(e) {
+			var e = e || window.event;
+			var _index = keyCode.keyDownArr.indexOf(util.getKeyCode());
+			if (_index >= 0) {
+				keyCode.keyDownArr.splice(_index, 1);
+			}
 		}
+	};
+	return function(dom, main, speed, callback) {
+		if (typeof speed != "number") {
+			speed = 1;
+		} else {
+			//速度必须大于60px每秒;每次移动的像素小于1px 浏览器会修正为0px;这也是因为运用了定时器的缺点;
+			//除以60是因为浏览器播放动画每秒60帧可以保持动画的流畅性;
+			speed = (speed / 60) > 1 ? (speed / 60) : 1
+		}
+		//用于左右 和上下穿透;
+		function changeXY(xy, min, max) {
+			if (xy < min) {
+				xy = max;
+			} else if (xy >= max) {
+				xy = min;
+			}
+			return xy;
+		};
 
-	})(),
+		addEvent(document, "keydown", function(e) {
+			var e = e || window.event;
+			keyCode.downKeyCode();
+			addEvent(document, "keyup", function(e) {
+				var e = e || window.event;
+				keyCode.upKeyCode();
+			})
+		})
+		setInterval(function() {
+			keyCode.keyDownArr.forEach(function(item) {
+				var mainHeight = parseFloat(getStyle(main, "height")) - 20,
+					mainWidth = parseFloat(getStyle(main, "width")) - 20;
+				if (item === 37) {
+					var x = dom.offsetLeft - speed;
+					x = changeXY(x, 0, mainWidth);
+					dom.style.left = x + "px";
+				} else if (item === 38) {
+					var y = dom.offsetTop - speed
+					y = changeXY(y, 0, mainHeight);
+					dom.style.top = y + "px";
+				} else if (item === 39) {
+					var x = dom.offsetLeft + speed;
+					x = changeXY(x, 0, mainWidth);
+					dom.style.left = x + "px";
+				} else if (item === 40) {
+					var y = dom.offsetTop + speed;
+					y = changeXY(y, 0, mainHeight);
+					dom.style.top = y + "px";
+				}
+				callback && callback();
+			})
+		}, 1000 / 60)
+	};
+})(),
 	//添加空白;
 	//num代表需要添加多少个Br
 	//dom表示在上面元素之前添加;不传默认在body后面添加;
