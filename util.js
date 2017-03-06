@@ -320,19 +320,19 @@ var util = {
 			}
 			return xy;
 		};
-
-		addEvent(document, "keydown", function(e) {
+		var me = this;
+		this.addEvent(document, "keydown", function(e) {
 			var e = e || window.event;
-			keyCode.downKeyCode();
-			addEvent(document, "keyup", function(e) {
+			keyCode.downKeyCode();	
+			me.addEvent(document, "keyup", function(e) {
 				var e = e || window.event;
 				keyCode.upKeyCode();
 			})
 		})
 		setInterval(function() {
 			keyCode.keyDownArr.forEach(function(item) {
-				var mainHeight = parseFloat(getStyle(main, "height")) - 20,
-					mainWidth = parseFloat(getStyle(main, "width")) - 20;
+				var mainHeight = parseFloat(me.getStyle(main, "height")) - 20,
+					mainWidth = parseFloat(me.getStyle(main, "width")) - 20;
 				if (item === 37) {
 					var x = dom.offsetLeft - speed;
 					x = changeXY(x, 0, mainWidth);
