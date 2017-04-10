@@ -6,13 +6,13 @@ var util = {
 			dom.addEventListener(type, fn)
 		} else if (dom.attachEvent) {
 			dom.attachEvent("on" + type, fn)
-		} 
+		}
 	},
-	removeEvent:function(dom,type,fn){
-		if(dom.removeEventListener){
-			dom.removeEventListener(type,fn)
-		}else if(dom.detachEvent){
-			dom.detachEvent("on"+type,fn)
+	removeEvent: function(dom, type, fn) {
+		if (dom.removeEventListener) {
+			dom.removeEventListener(type, fn)
+		} else if (dom.detachEvent) {
+			dom.detachEvent("on" + type, fn)
 		}
 	},
 	//自定义事件
@@ -44,37 +44,37 @@ var util = {
 	//key:cookie名称；
 	//value：cookie值；
 	//options：一个对象 包含expires path domain secure 
-	setCookie:function(key,value,options){
+	setCookie: function(key, value, options) {
 		var str = escape(key) + "=" + escape(value);
-		if(options.expires){
-			var time= new Date();
-			time.setTime(time.getTime()+options.expires*3600*1000)
-			options.expires=time.toUTCString();
+		if (options.expires) {
+			var time = new Date();
+			time.setTime(time.getTime() + options.expires * 3600 * 1000)
+			options.expires = time.toUTCString();
 		}
-		for(var x in options){
-			str += ";"+ x + "=" + options[x];
+		for (var x in options) {
+			str += ";" + x + "=" + options[x];
 		}
-		document.cookie=str;
+		document.cookie = str;
 	},
-	getCookie:function(key){
-		var _key =" "+escape(key);
-		var _cookie=" "+document.cookie+";";
-		var index=_cookie.indexOf(_key);
-		if(index===-1){
+	getCookie: function(key) {
+		var _key = " " + escape(key);
+		var _cookie = " " + document.cookie + ";";
+		var index = _cookie.indexOf(_key);
+		if (index === -1) {
 			return null
 		};
-		var endIndex=_cookie.indexOf(";",index);
-		var value=_cookie.slice(index+_key.length+1,endIndex);
-		value= unescape(value);
+		var endIndex = _cookie.indexOf(";", index);
+		var value = _cookie.slice(index + _key.length + 1, endIndex);
+		value = unescape(value);
 		return value;
 	},
-	deleteCookie:function(key){
-		var value=this.getCookie(key);
-		if(valie===null){
+	deleteCookie: function(key) {
+		var value = this.getCookie(key);
+		if (valie === null) {
 			return false;
 		}
-		this.setCookie(key,null,{
-			expires:0
+		this.setCookie(key, null, {
+			expires: 0
 		})
 	},
 	//子类继承
@@ -114,13 +114,13 @@ var util = {
 		}
 		return c;
 	},
-	stopPropagation:function(e){
+	stopPropagation: function(e) {
 		var e = e || window.event;
-		e.stopPropagation?e.stopPropagation():e.cancelBubble=true;
+		e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
 	},
-	preventDefault:function(e){
+	preventDefault: function(e) {
 		var e = e || window.event;
-		e.preventDefault?e.preventDefault():e.returnValue=false;
+		e.preventDefault ? e.preventDefault() : e.returnValue = false;
 	},
 	//元素缩放方法 传入三个参数
 	/**
@@ -130,7 +130,7 @@ var util = {
 	 */
 	drag: function(bod, dom, flag) {
 		var me = this;
-		this.addEvent(dom,"mousedown", function(e) {
+		this.addEvent(dom, "mousedown", function(e) {
 			me.preventDefault();
 			me.stopPropagation();
 			var x = e.clientX,
@@ -157,9 +157,9 @@ var util = {
 						bod.style.width = width + X + "px";
 					}
 				};
-			me.addEvent(document,"mousemove", _darg)
-			me.addEvent(document,"mouseup", function() {
-				me.removeEvent(document,"mousemove", _darg);
+			me.addEvent(document, "mousemove", _darg)
+			me.addEvent(document, "mouseup", function() {
+				me.removeEvent(document, "mousemove", _darg);
 			})
 		})
 	},
@@ -171,7 +171,7 @@ var util = {
 	DOMMove: function(bod, ele) { //移动 bod 是需要移动的dom ele是可以触发移动的子dom
 		ele = ele ? ele : bod; //如果只传一个参数  那就全部可以移动
 		var me = this;
-		this.addEvent(ele,"mousedown", function(e) {
+		this.addEvent(ele, "mousedown", function(e) {
 			me.stopPropagation();
 			me.preventDefault();
 			var x = e.clientX,
@@ -184,9 +184,9 @@ var util = {
 					bod.style.top = e.clientY - clickY + "px";
 					me.preventDefault()
 				};
-			me.addEvent(document,"mousemove", _move);
-			me.addEvent(document,"mouseup", function() {
-				me.removeEvent(document,"mousemove", _move);
+			me.addEvent(document, "mousemove", _move);
+			me.addEvent(document, "mouseup", function() {
+				me.removeEvent(document, "mousemove", _move);
 			})
 		})
 	},
@@ -202,13 +202,15 @@ var util = {
 	//节流函数 传入3个参数; fn 节流的函数, time节流的间隔时间,默认50 , context :函数作用域,默认window ;
 	//间隔时间调用;
 	throttlev: function(fn, time, context) {
-		var old = new Date().getTime();
+		if (typeof time !== "number") {
+			time = 50;
+			context = time;
+		}
+		var old = new Date().getTime(),
+			now, arg;
 		return function() {
-			var now = new Date().getTime();
-			if (typeof time !== "number") {
-				time = 50;
-				context = time;
-			}
+			now = new Date().getTime();
+			arg = arguments;
 			if (now - old > time) {
 				fn.apply(context);
 				old = now;
@@ -218,10 +220,15 @@ var util = {
 	//节流函数2 
 	//停止后多少秒调用
 	throttle: function(fn, time, context) {
-		clearTimeout(fn.id);
-		fn.id = setTimeout(function() {
-			fn.call(context)
-		}, time)
+		var times = null,
+			arg;
+		return function() {
+			arg = arguments;
+			clearTimeout(times);
+			times = setTimeout(function() {
+				fn.apply(context, arg)
+			}, time)
+		}
 	},
 	//16进制颜色转rgb
 	//参数传入"#xxx" || "#xxxxxx"
@@ -279,82 +286,82 @@ var util = {
 	 *speed 每秒移动速度;
 	 *callback 每次执行触发的函数;
 	 */
- keyDomMove : (function() {
-	//通过闭包保存变量
-	var keyCode = {
-		keyDownArr: [],
-		//每次按下上下左右的将当前按下的方向保存 为ture;
-		downKeyCode: function(e) {
-			var e = e || window.event;
-			//只需要用到上下左右 只保存4个键值;
-			if (util.getKeyCode() === 37 || util.getKeyCode() === 38 || util.getKeyCode() === 39 || util.getKeyCode() === 40) {
-				e.preventDefault ? e.preventDefault() : e.cancelBubble = true;
-				if (keyCode.keyDownArr.indexOf(e.keyCode) === -1) {
-					keyCode.keyDownArr.push(e.keyCode)
-				}
-			}
-		},
-		//每次弹起上下左右的将当前弹起的方向修改为flase;
-		upKeyCode: function(e) {
-			var e = e || window.event;
-			var _index = keyCode.keyDownArr.indexOf(util.getKeyCode());
-			if (_index >= 0) {
-				keyCode.keyDownArr.splice(_index, 1);
-			}
-		}
-	};
-	return function(dom, main, speed, callback) {
-		if (typeof speed != "number") {
-			speed = 1;
-		} else {
-			//速度必须大于60px每秒;每次移动的像素小于1px 浏览器会修正为0px;这也是因为运用了定时器的缺点;
-			//除以60是因为浏览器播放动画每秒60帧可以保持动画的流畅性;
-			speed = (speed / 60) > 1 ? (speed / 60) : 1
-		}
-		//用于左右 和上下穿透;
-		function changeXY(xy, min, max) {
-			if (xy < min) {
-				xy = max;
-			} else if (xy >= max) {
-				xy = min;
-			}
-			return xy;
-		};
-		var me = this;
-		this.addEvent(document, "keydown", function(e) {
-			var e = e || window.event;
-			keyCode.downKeyCode();	
-			me.addEvent(document, "keyup", function(e) {
+	keyDomMove: (function() {
+		//通过闭包保存变量
+		var keyCode = {
+			keyDownArr: [],
+			//每次按下上下左右的将当前按下的方向保存 为ture;
+			downKeyCode: function(e) {
 				var e = e || window.event;
-				keyCode.upKeyCode();
-			})
-		})
-		setInterval(function() {
-			keyCode.keyDownArr.forEach(function(item) {
-				var mainHeight = parseFloat(me.getStyle(main, "height")) - 20,
-					mainWidth = parseFloat(me.getStyle(main, "width")) - 20;
-				if (item === 37) {
-					var x = dom.offsetLeft - speed;
-					x = changeXY(x, 0, mainWidth);
-					dom.style.left = x + "px";
-				} else if (item === 38) {
-					var y = dom.offsetTop - speed
-					y = changeXY(y, 0, mainHeight);
-					dom.style.top = y + "px";
-				} else if (item === 39) {
-					var x = dom.offsetLeft + speed;
-					x = changeXY(x, 0, mainWidth);
-					dom.style.left = x + "px";
-				} else if (item === 40) {
-					var y = dom.offsetTop + speed;
-					y = changeXY(y, 0, mainHeight);
-					dom.style.top = y + "px";
+				//只需要用到上下左右 只保存4个键值;
+				if (util.getKeyCode() === 37 || util.getKeyCode() === 38 || util.getKeyCode() === 39 || util.getKeyCode() === 40) {
+					e.preventDefault ? e.preventDefault() : e.cancelBubble = true;
+					if (keyCode.keyDownArr.indexOf(e.keyCode) === -1) {
+						keyCode.keyDownArr.push(e.keyCode)
+					}
 				}
-				callback && callback();
+			},
+			//每次弹起上下左右的将当前弹起的方向修改为flase;
+			upKeyCode: function(e) {
+				var e = e || window.event;
+				var _index = keyCode.keyDownArr.indexOf(util.getKeyCode());
+				if (_index >= 0) {
+					keyCode.keyDownArr.splice(_index, 1);
+				}
+			}
+		};
+		return function(dom, main, speed, callback) {
+			if (typeof speed != "number") {
+				speed = 1;
+			} else {
+				//速度必须大于60px每秒;每次移动的像素小于1px 浏览器会修正为0px;这也是因为运用了定时器的缺点;
+				//除以60是因为浏览器播放动画每秒60帧可以保持动画的流畅性;
+				speed = (speed / 60) > 1 ? (speed / 60) : 1
+			}
+			//用于左右 和上下穿透;
+			function changeXY(xy, min, max) {
+				if (xy < min) {
+					xy = max;
+				} else if (xy >= max) {
+					xy = min;
+				}
+				return xy;
+			};
+			var me = this;
+			this.addEvent(document, "keydown", function(e) {
+				var e = e || window.event;
+				keyCode.downKeyCode();
+				me.addEvent(document, "keyup", function(e) {
+					var e = e || window.event;
+					keyCode.upKeyCode();
+				})
 			})
-		}, 1000 / 60)
-	};
-})(),
+			setInterval(function() {
+				keyCode.keyDownArr.forEach(function(item) {
+					var mainHeight = parseFloat(me.getStyle(main, "height")) - 20,
+						mainWidth = parseFloat(me.getStyle(main, "width")) - 20;
+					if (item === 37) {
+						var x = dom.offsetLeft - speed;
+						x = changeXY(x, 0, mainWidth);
+						dom.style.left = x + "px";
+					} else if (item === 38) {
+						var y = dom.offsetTop - speed
+						y = changeXY(y, 0, mainHeight);
+						dom.style.top = y + "px";
+					} else if (item === 39) {
+						var x = dom.offsetLeft + speed;
+						x = changeXY(x, 0, mainWidth);
+						dom.style.left = x + "px";
+					} else if (item === 40) {
+						var y = dom.offsetTop + speed;
+						y = changeXY(y, 0, mainHeight);
+						dom.style.top = y + "px";
+					}
+					callback && callback();
+				})
+			}, 1000 / 60)
+		};
+	})(),
 	//添加空白;
 	//num代表需要添加多少个Br
 	//dom表示在上面元素之前添加;不传默认在body后面添加;
